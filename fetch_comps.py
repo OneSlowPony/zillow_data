@@ -8,9 +8,9 @@ import urllib
 import utils
 
 ##User specific ID used for IDing requests
-zws_id = 'X1-ZWz18u91jx3wnf_7zykg'
+zws_id = ''
 ##Address of property##
-address = '225-Channing-St-NE'
+address = ''
 ##This one is intuitive
 citystatezip = 'Washington-DC'
 ##Zillow ID for property. Get from URL in browswer
@@ -49,7 +49,7 @@ comp_cols = ['city', 'latitude', 'longitude', 'state',
 ##Get starting home data##
 r = utils.get_response(api = 'search', params = search_params)
 
-home = utils.parse_response(response = r, 
+home = utils.parse_response(response = r,
                             api = 'search',
                             tags = search_tags,
                             cols = home_cols)
