@@ -4,62 +4,64 @@ from xml.etree import ElementTree
 import xmltodict
 from bs4 import BeautifulSoup
 import numpy as np
+import urllib
+import utils
 
-
-zws_id = ''
-address = ''
-citystatezip =''
-zpid = ''
+##User specific ID used for IDing requests
+zws_id = 'X1-ZWz18u91jx3wnf_7zykg'
+##Address of property##
+address = '225-Channing-St-NE'
+##This one is intuitive
+citystatezip = 'Washington-DC'
+##Zillow ID for property. Get from URL in browswer
+zpid = '491287'
+##How any results
 count = '25'
 
-
-
-##GET HOME DATA##
+##Identifying info to base search on##
 search_params = {'zws_id': zws_id, 'address': address,
                 'citystatezip': citystatezip,
                 'zpid': zpid, 'count': count}
 
-r = get_response(api = 'search', params = search_params)
-
-
-cont = xmltodict.parse(r.content.decode('utf-8'))
-cont =  dict(cont.get('SearchResults:searchresults', None)['response']['results']['result'])
-
+##Tags to extract from respons##
 search_tags = (('address'),
-            ('zestimate','valuationRange','high'),
-            ('zestimate','valuationRange','low'),
-            ('zestimate', 'amount'))
+                ('zestimate','valuationRange','high'),
+                ('zestimate','valuationRange','low'),
+                ('zestimate', 'amount'))
 
-search_dfs = [get_attribute(api = 'search', data = cont, tag = vals) for vals in search_tags]
-home =  pd.concat(search_dfs, axis = 1)
-home_cols = ['street', 'zipcode', 'city', 'state', 'latitude', 'longitude', 'currency1', 'valuation_high',  'currency2', 'valuation_low', 'currency3' ,'zestimate']
-home.columns = home_cols
-home['zpid'] = cont['zpid']
+comp_tags =  (('address'),
+              ('zestimate','valuationRange','high'),
+              ('zestimate','valuationRange','low'),
+              ('zestimate', 'amount'))
 
- ##GET COMPS##
-comp_base = 'http://www.zillow.com/webservice/GetComps.htm?'
+##Colums for data##
+home_cols = ['street', 'zipcode', 'city', 'state',
+             'latitude', 'longitude', 'currency1',
+             'valuation_high',  'currency2', 'valuation_low',
+             'currency3' ,'zestimate']
 
-comp_url = comp_base +'&zws-id='+zws_id+'&zpid='+zpid+'&count='+count
-comp_url
-r = requests.get(comp_url)
-
-cont = xmltodict.parse(r.content.decode('utf-8'))
-keys = cont.get('Comps:comps', None)['response']['properties']['comparables']['comp']
-
-tag_vals =  (('address'),
-            ('zestimate','valuationRange','high'),
-            ('zestimate','valuationRange','low'),
-            ('zestimate', 'amount'))
+comp_cols = ['city', 'latitude', 'longitude', 'state',
+             'street', 'zipcode',  'valuation_high',
+             'currency1', 'valuation_low', 'currency2',
+             'zestimate', 'currency3', 'zpid']
 
 
-sep_df = [get_attribute(api = 'comp', data = keys, tag = vals) for vals in tag_vals]
+##Get starting home data##
+r = utils.get_response(api = 'search', params = search_params)
 
-comp= pd.concat(sep_df, axis = 1)
-comp['zpid'] = [keys[b][tag] for b in range(len(keys))]
+home = utils.parse_response(response = r, 
+                            api = 'search',
+                            tags = search_tags,
+                            cols = home_cols)
 
-comp_cols = ['city', 'latitude', 'longitude', 'state', 'street', 'zipcode', 'valuation_high', 'currency1', 'valuation_low', 'currency2', 'zestimate', 'currency3', 'zpid']
 
-comp.columns = comp_cols
+##Get Comps for original property
+comp_response = utils.get_response(api = 'comp', params = search_params)
+
+comps = utils.parse_response(response = comp_response,
+                             api = 'comp',
+                             tags = comp_tags,
+                             cols = comp_cols)
 
 home = home[comp_cols]
 
