@@ -6,6 +6,10 @@ from bs4 import BeautifulSoup
 import numpy as np
 import urllib
 import utils
+import datetime
+import csv
+import os.path
+os.path.isfile(fname)
 
 ##User specific ID used for IDing requests
 zws_id = ''
@@ -38,7 +42,7 @@ comp_tags =  (('address'),
 home_cols = ['street', 'zipcode', 'city', 'state',
              'latitude', 'longitude', 'currency1',
              'valuation_high',  'currency2', 'valuation_low',
-             'currency3' ,'zestimate']
+             'currency3' ,'zestimate', 'zpid']
 
 comp_cols = ['city', 'latitude', 'longitude', 'state',
              'street', 'zipcode',  'valuation_high',
@@ -63,7 +67,29 @@ comps = utils.parse_response(response = comp_response,
                              tags = comp_tags,
                              cols = comp_cols)
 
+##Cmobine data and write to csv
 home = home[comp_cols]
 
-data_list = [home,comp]
+data_list = [home,comps]
 all_data = pd.concat(data_list)
+all_data['record_date'] = datetime.datetime.now()
+all_data.to_csv(path)
+
+
+path = 'data/comps.csv'
+
+
+
+all_data.to_csv(path)
+
+all_data.keys()
+
+if os.path.isfile(path):
+    ##check for exising file
+    existing_data = pd.read_csv(path)
+    existing_data = existing_data.drop('Unnamed: 0', axis = 1)
+    data_list = [all_data, existing_data]
+
+    all_data = pd.concat(data_list, sort = 'FALSE')
+
+all_data.to_csv(path)
