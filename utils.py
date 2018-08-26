@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 import numpy as np
 import urllib
 
+
 def get_attribute(api,data,tag):
 
     print(tag)
@@ -59,6 +60,8 @@ def get_response(api, params):
 
     return r
 
+
+
 def parse_response(response, tags, cols, api):
 
     print('Parsing desired data from response.....')
@@ -78,20 +81,18 @@ def parse_response(response, tags, cols, api):
         search_dfs = [get_attribute(api = 'comp', data = keys, tag = vals) for vals in tags]
 
         ##THIS IS BROKEN--FIX
-        zpid = [keys[b][tag] for b in range(len(keys))]
+        zpid = [keys[b]['zpid'] for b in range(len(keys))]
 
 
     print('Combining data frames')
 
     home_data =  pd.concat(search_dfs, axis = 1)
 
-    home_cols = ['street', 'zipcode', 'city', 'state', 'latitude',
-            'longitude', 'currency1', 'valuation_high',  'currency2',
-            'valuation_low', 'currency3' ,'zestimate']
-
     print('Setting column names')
 
-    home_data.columns = cols
     home_data['zpid'] = zpid
+
+    home_data.columns = cols
+
 
     return home_data
